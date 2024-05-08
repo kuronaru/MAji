@@ -1,23 +1,25 @@
 import os
-from PIL import Image
 import torch
+from PIL import Image
 from torch.utils.data import Dataset
 
 
-class MyDataset(Dataset):
-    def __init__(self, path, n_img, index=0, transform=None) -> None:
-        super(MyDataset, self).__init__()
-        self.path = path
+class MajDataset(Dataset):
+    def __init__(self, path, n_img, start_index=0, transform=None) -> None:
+        super(MajDataset, self).__init__()
+        self.directory = path
 
         img_paths = []
         labels = []
         for i in range(n_img):
-            img_name = "%03d.jpg" % (i + index)
-            # print("add ", img_name)
-            img_paths.append(os.path.join(self.path, img_name))
-            if (self.path.find("cat") != -1):
+            img_name = "%04d_r6.jpg" % (i + start_index)
+            img_path = os.path.join(self.directory, img_name)
+            if (os.path.exists(img_path)):
+                print("add image ", img_path)
+                img_paths.append(img_path)
+            if (self.directory.find("cat") != -1):
                 labels.append(int(1))
-            elif (self.path.find("airplane") != -1):
+            elif (self.directory.find("airplane") != -1):
                 labels.append(int(0))
 
         self.img_paths = img_paths

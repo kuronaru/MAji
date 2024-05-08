@@ -6,6 +6,7 @@ SHUNZI = 0
 KEZI = 1
 KANGZI = 2
 
+
 class Fulu:
     def __init__(self, type, tile_type, number) -> None:
         self.type = type

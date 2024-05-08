@@ -1,13 +1,13 @@
 import logging
 
+from src.utils.dbgf import DebugPrintf
+
 tile_symbol = [['🀇', '🀈', '🀉', '🀊', '🀋', '🀌', '🀍', '🀎', '🀏'],
                ['🀙', '🀚', '🀛', '🀜', '🀝', '🀞', '🀟', '🀠', '🀡'],
                ['🀐', '🀑', '🀒', '🀓', '🀔', '🀕', '🀖', '🀖', '🀘'],
                ['🀀', '🀁', '🀂', '🀃', '🀆', '🀅', '🀄']]
 
-
-def dbglvl_config(level):
-    logging.basicConfig(level=level)
+dbgf = DebugPrintf("class_Hand")
 
 
 def convert(tile_str):
@@ -51,7 +51,6 @@ class Hand:
     """
     def __init__(self, tile_str) -> None:
         self.dbgf = logging.getLogger("class_Hand")
-        dbglvl_config(logging.INFO)
         self.__man = []
         self.__pin = []
         self.__so = []
