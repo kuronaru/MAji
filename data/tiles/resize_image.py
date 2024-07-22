@@ -24,4 +24,5 @@ def resize_images(input_dir, output_dir, target_res):
                         resized_img.save(output_path)
 
 
-resize_images(input_directory, output_directory, target_resolution)
+if __name__ == '__main__':
+    resize_images(input_directory, output_directory, target_resolution)
