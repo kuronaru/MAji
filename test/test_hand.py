@@ -1,7 +1,7 @@
 from src.utils.hand import Hand
 
-DATAPATH = "../data/data.txt"
-with open(DATAPATH, 'r') as f:
+PATH = "../data/data.txt"
+with open(PATH, 'r') as f:
     data = f.read().splitlines()
     for hand_str in data:
         hand = Hand(hand_str)

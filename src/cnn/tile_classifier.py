@@ -13,7 +13,7 @@ class TileClassifier(nn.Module):
         self.conv2_2 = ResidualBlock(128, 128, 1)
         self.conv3_1 = ResidualBlock(128, 256, 2)
         self.conv3_2 = ResidualBlock(256, 256, 1)
-        self.fc = nn.Linear(256, 37)
+        self.fc = nn.Linear(256, 38)
 
     def forward(self, x):
         y = self.max_pool(self.conv1(x))

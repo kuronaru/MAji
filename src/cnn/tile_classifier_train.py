@@ -15,7 +15,7 @@ from src.utils.dbgf import DebugPrintf
 
 dbgf = DebugPrintf("tile_classifier_train", INFO)
 
-LOAD_MODEL = False
+LOAD_MODEL = True
 SAVE_MODEL = True
 dbgf(INFO, "Load model = %s, save model = %s" % (LOAD_MODEL, SAVE_MODEL))
 DEVICE = torch.cuda.current_device() if torch.cuda.is_available() else "cpu"
@@ -98,8 +98,8 @@ transform = transforms.Compose(
     [transforms.ToTensor(),
      transforms.Normalize((0.6710, 0.6679, 0.6726), (0.2327, 0.2291, 0.2132))])
 
-train_dataset = TileDataset("../../data/tiles", 8, transform=transform)
-test_dataset = TileDataset("../../data/tiles", 1, 5, transform=transform)
+train_dataset = TileDataset("../../data/tiles/train_data", transform=transform)
+test_dataset = TileDataset("../../data/tiles/test_data", transform=transform)
 train_size = len(train_dataset)
 test_size = len(test_dataset)
 dbgf(INFO, "Train dataset size %d, test dataset size %d" % (train_size, test_size))
