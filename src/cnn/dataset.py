@@ -1,6 +1,7 @@
 import os
+
+import cv2
 import torch
-from PIL import Image
 from torch.utils.data import Dataset
 
 
@@ -32,7 +33,7 @@ class MajDataset(Dataset):
     def __getitem__(self, index):
         img_path = self.img_paths[index]
         label = self.labels[index]
-        image = Image.open(img_path)
+        image = cv2.imread(img_path)
         if (self.transform):
             image = self.transform(image)
         label = torch.Tensor([label])
@@ -80,7 +81,7 @@ class TileDataset(Dataset):
     def __getitem__(self, index):
         img_path = self.img_paths[index]
         label = self.labels[index]
-        image = Image.open(img_path)
+        image = cv2.imread(img_path)
         if (self.transform):
             image = self.transform(image)
         label = torch.Tensor([label])
