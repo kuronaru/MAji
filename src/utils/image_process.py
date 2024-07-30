@@ -400,12 +400,33 @@ class GamesScanList:
 
         self.fulu_self_coordinate_list = []
         for i in range(16):
-            coordinate = 869, 938, 1651 - round(65 * i) - 22 * int(i / 3), 1751 - round(65 * i) - 22 * int(i / 3)
+            # 65 for width, 22 * int(i / 3) for width increment
+            coordinate = 869, 938, 1651 - 65 * i - 22 * int(i / 3), 1751 - 65 * i - 22 * int(i / 3)
             self.fulu_self_coordinate_list.append(coordinate)
 
         self.fulu_next_coordinate_list = []
+        # NOTE: Possibly be uncoordinated at fulu 3 or 4, not tested
+        for i in range(16):
+            # 24 for width of first tile, 12 for width offset of a horizontally placed tile, 2 for width increment
+            # 7 for x offset, int(i / 3) for height increment
+            coordinate = (39 + 24 * i + (12 + 2 * i) * int(i / 3), 75 + 24 * i + (12 + 2 * i) * int(i / 3),
+                          1460 + round(7 * i + int(i / 3)) + i, 1528 + round(7 * i + int(i / 3)) + i)
+            self.fulu_next_coordinate_list.append(coordinate)
+
         self.fulu_opp_coordinate_list = []
+        for i in range(16):
+            # 43 for width, 21 for width offset of a horizontally placed tile, -3 for width increment
+            coordinate = 32, 63, 439 + 43 * i + 18 * int(i / 3), 503 + 43 * i + 18 * int(i / 3)
+            self.fulu_opp_coordinate_list.append(coordinate)
+
         self.fulu_pre_coordinate_list = []
+        # NOTE: Possibly be uncoordinated at fulu 3 or 4, not tested
+        for i in range(16):
+            # 50 for width of first tile, 18 for width offset of a horizontally placed tile, -4 for width increment
+            # 7 for x offset, int(i / 3) for height increment
+            coordinate = (799 - 50 * i - (18 - 4 * i) * int(i / 3), 867 - 50 * i - 18 * int(i / 3),
+                          139 + round(15 * i + int(i / 3)) + i, 238 + round(15 * i + int(i / 3)) + i)
+            self.fulu_pre_coordinate_list.append(coordinate)
 
     def get_hand_self_coordinate_list(self):
         return self.hand_self_coordinate_list
@@ -456,9 +477,28 @@ class GamesScanList:
             with torch.no_grad():
                 output = self.trained_model(img_tensor)
             output_argmax = output.argmax(1)
+
+            # for horizontally placed tiles, output argmax probability is usually < 0.9
+            # rotate the tile and choose the one with higher certainty
+            uncertain_threshold = 0.97
+            if (output[0][output_argmax] < uncertain_threshold):
+                dbgf(DEBUG, "uncertain argmax output %.2f" % output[0][output_argmax])
+                img_temp = img
+                if (rotate is not None):
+                    img_temp = cv2.rotate(img_temp, rotate)
+                img_temp = cv2.rotate(img_temp, cv2.ROTATE_90_CLOCKWISE)
+                img_temp = cv2.resize(img_temp, (40, 60))
+                img_tensor = self.transform(img_temp).unsqueeze(0)
+                with torch.no_grad():
+                    output_rotated = self.trained_model(img_tensor)
+                output_rotated_argmax = output_rotated.argmax(1)
+                dbgf(DEBUG, "rotated argmax output %.2f" % output_rotated[0][output_rotated_argmax])
+                if (output_rotated[0][output_rotated_argmax] > output[0][output_argmax]):
+                    output_argmax = output_rotated_argmax
             if (output_argmax == 30):
                 dbgf(DEBUG, "read 0z, cut off at index %d" % index)
                 break
+
             code = translate_feature(output_argmax)
             code_list.append(code)
 
@@ -522,11 +562,12 @@ def parse_games(image, model):
     hand_next_fulu_image_list = crop_image(image, hand_next_fulu_coordinate_list)
     # debug test
     # for index, img in enumerate(hand_next_fulu_image_list):
+    #     img = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
     #     img = cv2.resize(img, (40, 60))
     #     cv2.imshow("Cropped fulu Image", img)
     #     cv2.waitKey(0)
     # cv2.destroyAllWindows()
-    hand_next_fulu_list = scan_list.get_code_list(hand_next_fulu_image_list, None, False)
+    hand_next_fulu_list = scan_list.get_code_list(hand_next_fulu_image_list, cv2.ROTATE_90_CLOCKWISE, False)
 
     # scan hand_opposite
     hand_opp_coordinate_list = scan_list.get_hand_opp_coordinate_list()
@@ -539,11 +580,13 @@ def parse_games(image, model):
     hand_opp_fulu_image_list = crop_image(image, hand_opp_fulu_coordinate_list)
     # debug test
     # for index, img in enumerate(hand_opp_fulu_image_list):
+    #     dbgf(DEBUG, hand_opp_fulu_coordinate_list[index])
+    #     img = cv2.rotate(img, cv2.ROTATE_180)
     #     img = cv2.resize(img, (40, 60))
     #     cv2.imshow("Cropped fulu Image", img)
     #     cv2.waitKey(0)
     # cv2.destroyAllWindows()
-    hand_opp_fulu_list = scan_list.get_code_list(hand_opp_fulu_image_list, None, False)
+    hand_opp_fulu_list = scan_list.get_code_list(hand_opp_fulu_image_list, cv2.ROTATE_180, False)
 
     # scan hand_preceding
     hand_pre_coordinate_list = scan_list.get_hand_pre_coordinate_list()
@@ -556,11 +599,12 @@ def parse_games(image, model):
     hand_pre_fulu_image_list = crop_image(image, hand_pre_fulu_coordinate_list)
     # debug test
     # for index, img in enumerate(hand_pre_fulu_image_list):
+    #     img = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
     #     img = cv2.resize(img, (40, 60))
     #     cv2.imshow("Cropped fulu Image", img)
     #     cv2.waitKey(0)
     # cv2.destroyAllWindows()
-    hand_pre_fulu_list = scan_list.get_code_list(hand_pre_fulu_image_list, None, False)
+    hand_pre_fulu_list = scan_list.get_code_list(hand_pre_fulu_image_list, cv2.ROTATE_90_COUNTERCLOCKWISE, False)
 
     # scan discard_self
     discard_self_coordinate_list = scan_list.get_discard_self_coordinate_list()
@@ -621,11 +665,8 @@ def parse_games(image, model):
             hand_opp_code_list, hand_opp_fulu_list, hand_pre_code_list, hand_pre_fulu_list,
             discard_self_code_list, discard_next_code_list, discard_opp_code_list, discard_pre_code_list)
 
-    # test
-    # return hand_self_code_list
-
 
 if __name__ == "__main__":
-    test_image = cv2.imread("../../data/games/0036_r12.jpg")
+    test_image = cv2.imread("../../data/games/0029_r12.jpg")
     sample_image_coordinates(test_image)
     # batch_crop_games("../../data/games", "../../data/tiles/raw")
