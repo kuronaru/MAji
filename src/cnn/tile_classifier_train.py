@@ -10,9 +10,9 @@ from tqdm import tqdm
 
 from src.cnn.dataset import TileDataset
 from src.cnn.tile_classifier import TileClassifier
-from src.utils.dbgf import DebugPrintf
+from src.utils.dbgf import DebugPrintf, GLOBAL_DBG_LVL
 
-dbgf = DebugPrintf("tile_classifier_train", INFO)
+dbgf = DebugPrintf("tile_classifier_train", GLOBAL_DBG_LVL)
 
 LOAD_MODEL = True
 SAVE_MODEL = False
