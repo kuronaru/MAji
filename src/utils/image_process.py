@@ -9,9 +9,9 @@ from matplotlib import pyplot as plt
 from torchvision import transforms
 
 from src.cnn.tile_classifier import TileClassifier
-from src.utils.dbgf import DebugPrintf
+from src.utils.dbgf import DebugPrintf, GLOBAL_DBG_LVL
 
-dbgf = DebugPrintf("image_process", DEBUG)
+dbgf = DebugPrintf("image_process", GLOBAL_DBG_LVL)
 
 
 def imshow_normalized(tensor, mean, std):
@@ -610,56 +610,21 @@ def parse_games(image, model):
     discard_self_coordinate_list = scan_list.get_discard_self_coordinate_list()
     discard_self_image_list = crop_image(image, discard_self_coordinate_list)
     discard_self_code_list = scan_list.get_code_list(discard_self_image_list, None, False)
-    # for index, img in enumerate(discard_self_image_list):
-    #     img_temp = cv2.resize(img, (40, 60))
-    #     img_tensor = transform(img_temp).unsqueeze(0)
-    #     with torch.no_grad():
-    #         output = trained_model(img_tensor)
-    #     output_argmax = output.argmax(1)
-    #     code = translate_feature(output_argmax)
-    #     discard_self_code_list.append(code)
 
     # scan discard_next
     discard_next_coordinate_list = scan_list.get_discard_next_coordinate_list()
     discard_next_image_list = crop_image(image, discard_next_coordinate_list)
     discard_next_code_list = scan_list.get_code_list(discard_next_image_list, cv2.ROTATE_90_CLOCKWISE, False)
-    # for index, img in enumerate(discard_next_image_list):
-    #     img_temp = cv2.rotate(img, cv2.ROTATE_90_CLOCKWISE)
-    #     img_temp = cv2.resize(img_temp, (40, 60))
-    #     img_tensor = transform(img_temp).unsqueeze(0)
-    #     with torch.no_grad():
-    #         output = trained_model(img_tensor)
-    #     output_argmax = output.argmax(1)
-    #     code = translate_feature(output_argmax)
-    #     discard_next_code_list.append(code)
 
     # scan discard_opposite
     discard_opp_coordinate_list = scan_list.get_discard_opp_coordinate_list()
     discard_opp_image_list = crop_image(image, discard_opp_coordinate_list)
     discard_opp_code_list = scan_list.get_code_list(discard_opp_image_list, cv2.ROTATE_180, False)
-    # for index, img in enumerate(discard_opposite_image_list):
-    #     img_temp = cv2.rotate(img, cv2.ROTATE_180)
-    #     img_temp = cv2.resize(img_temp, (40, 60))
-    #     img_tensor = transform(img_temp).unsqueeze(0)
-    #     with torch.no_grad():
-    #         output = trained_model(img_tensor)
-    #     output_argmax = output.argmax(1)
-    #     code = translate_feature(output_argmax)
-    #     discard_opposite_code_list.append(code)
 
     # scan discard_preceding
     discard_pre_coordinate_list = scan_list.get_discard_pre_coordinate_list()
     discard_pre_image_list = crop_image(image, discard_pre_coordinate_list)
     discard_pre_code_list = scan_list.get_code_list(discard_pre_image_list, cv2.ROTATE_90_COUNTERCLOCKWISE, False)
-    # for index, img in enumerate(discard_pre_image_list):
-    #     img_temp = cv2.rotate(img, cv2.ROTATE_90_COUNTERCLOCKWISE)
-    #     img_temp = cv2.resize(img_temp, (40, 60))
-    #     img_tensor = transform(img_temp).unsqueeze(0)
-    #     with torch.no_grad():
-    #         output = trained_model(img_tensor)
-    #     output_argmax = output.argmax(1)
-    #     code = translate_feature(output_argmax)
-    #     discard_pre_code_list.append(code)
 
     return (hand_self_code_list, hand_self_fulu_list, hand_next_code_list, hand_next_fulu_list,
             hand_opp_code_list, hand_opp_fulu_list, hand_pre_code_list, hand_pre_fulu_list,
