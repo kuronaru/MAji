@@ -2,6 +2,7 @@ import logging
 
 GLOBAL_DBG_LVL = logging.INFO
 DATA_PROCESS_DBG_LVL = logging.DEBUG
+HAND_INFER_DBG_LVL = logging.DEBUG
 
 
 def debug_level_config(level):

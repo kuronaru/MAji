@@ -8,7 +8,7 @@ import torch
 from matplotlib import pyplot as plt
 from torchvision import transforms
 
-from src.cnn.tile_classifier import TileClassifier
+from src.nn.tile_classifier import TileClassifier
 from src.utils.dbgf import DebugPrintf, GLOBAL_DBG_LVL
 
 dbgf = DebugPrintf("image_process", GLOBAL_DBG_LVL)
@@ -299,8 +299,8 @@ def batch_crop_games(directory, save_path):
 
 
 class GamesScanList:
-    def __init__(self, model):
-        # Load the trained model
+    def __init__(self, model="../../data/model/model_tile_classifier.pt"):
+        # load the trained model
         self.trained_model = TileClassifier()
         assert os.path.exists(model), "model_tile_classifier does not exist"
         self.trained_model.load_state_dict(torch.load(model, map_location=torch.device("cpu")))
@@ -499,7 +499,8 @@ class GamesScanList:
                 dbgf(DEBUG, "read 0z, cut off at index %d" % index)
                 break
 
-            code = translate_feature(output_argmax)
+            # code = translate_feature(output_argmax)
+            code = output_argmax.item()
             code_list.append(code)
 
         if (fulu is True):
@@ -514,6 +515,11 @@ class GamesScanList:
 
 
 def translate_feature(feature):
+    """
+    translate numeric feature of the model output into tile code
+    :param feature: numeric argmax of the model output
+    :return: tile code, e.g. 12 to 2p
+    """
     if (feature == 30):
         dbgf(DEBUG, "None")
     number = feature % 10

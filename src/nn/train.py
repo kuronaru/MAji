@@ -6,8 +6,8 @@ from torch import optim
 from torchvision import transforms
 from torch.utils.data import DataLoader, ConcatDataset
 
-from src.cnn.dataset import MajDataset
-from src.cnn.resnet import ResNet18
+from src.nn.dataset import MajDataset
+from src.nn.resnet import ResNet18
 
 assert os.path.exists("../../data/model/model_resnet18.pt"), "model_resnet18 does not exist"
 LOAD_MODEL = os.path.exists("../../data/model/model_resnet18.pt")

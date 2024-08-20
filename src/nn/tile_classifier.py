@@ -1,7 +1,7 @@
 from torch import nn
 from torch.nn import functional
 
-from src.cnn.resnet import ResidualBlock
+from src.nn.resnet import ResidualBlock
 
 
 class TileClassifier(nn.Module):
