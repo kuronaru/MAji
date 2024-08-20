@@ -8,8 +8,8 @@ from torchvision import transforms
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from src.cnn.dataset import TileDataset
-from src.cnn.tile_classifier import TileClassifier
+from src.nn.dataset import TileDataset
+from src.nn.tile_classifier import TileClassifier
 from src.utils.dbgf import DebugPrintf, GLOBAL_DBG_LVL
 
 dbgf = DebugPrintf("tile_classifier_train", GLOBAL_DBG_LVL)
@@ -21,7 +21,7 @@ DEVICE = torch.cuda.current_device() if torch.cuda.is_available() else "cpu"
 # DEVICE = "cpu"
 dbgf(INFO, "Using device %s" % DEVICE)
 
-# Training parameters
+# training parameters
 epochs = 100
 batch_size = 8
 learning_rate = 0.1
@@ -66,7 +66,8 @@ def evaluate_model(model, loss_func, data_loader, test_size, device=DEVICE):
         labels = torch.flatten(labels).type(torch.LongTensor)
         inputs = inputs.to(device)
         labels = labels.to(device)
-        outputs = model(inputs)
+        with torch.no_grad():
+            outputs = model(inputs)
         loss += loss_func(outputs, labels).item()
         running_accuracy += (outputs.argmax(1) == labels).sum().cpu()
 
@@ -76,8 +77,12 @@ def evaluate_model(model, loss_func, data_loader, test_size, device=DEVICE):
     return total_loss, total_accuracy
 
 
-# Calculate mean and std
 def calculate_mean_std(dataset_path):
+    """
+    calculate mean and standard variation of dataset
+    :param dataset_path: dataset path "../../data/tiles/train_data"
+    :return: print mean and std
+    """
     # train_data:
     # mean: tensor([0.6527, 0.6394, 0.6298])
     # std: tensor([0.2142, 0.2231, 0.2260])
@@ -115,27 +120,26 @@ def run():
     # data_loaders = {"train": train_loader, "test": test_loader}
     # dataset_sizes = {"train": train_size, "test": test_size}
 
-    # Load the trained model
-    trained_model = TileClassifier()
+    # load the trained model
+    trained_model = "../../data/model/model_tile_classifier.pt"
+    model = TileClassifier()
     if (LOAD_MODEL):
-        assert os.path.exists("../../data/model/model_tile_classifier.pt"), "model_tile_classifier does not exist"
-        trained_model.load_state_dict(torch.load("../../data/model/model_tile_classifier.pt",
-                                                 map_location=torch.device("cpu")))
+        assert os.path.exists(trained_model), "model_tile_classifier does not exist"
+        model.load_state_dict(torch.load(trained_model, map_location=torch.device("cpu")))
 
-    # Optimizer and loss function
-    optimizer = optim.SGD(trained_model.parameters(), lr=learning_rate)
+    optimizer = optim.SGD(model.parameters(), lr=learning_rate)
     loss_func = torch.nn.CrossEntropyLoss()
 
     metrics = {"train_loss": [], "train_acc": [], "test_loss": [], "test_acc": []}
     for epoch in tqdm(range(epochs), total=epochs, desc="Training"):
-        train_loss_epoch, train_acc_epoch = train_model(trained_model, optimizer, loss_func, train_loader, train_size)
-        test_loss_epoch, test_acc_epoch = evaluate_model(trained_model, loss_func, test_loader, test_size)
+        train_loss_epoch, train_acc_epoch = train_model(model, optimizer, loss_func, train_loader, train_size)
+        test_loss_epoch, test_acc_epoch = evaluate_model(model, loss_func, test_loader, test_size)
         metrics["train_loss"].append(train_loss_epoch)
         metrics["train_acc"].append(train_acc_epoch)
         metrics["test_loss"].append(test_loss_epoch)
         metrics["test_acc"].append(test_acc_epoch)
 
-    # Plot result figure
+    # plot result figure
     plt.subplot(1, 2, 1)
     plt.title("Tile Classifier")
     plt.plot(range(epochs), metrics["train_loss"], range(epochs), metrics["test_loss"], marker=".")
@@ -149,13 +153,13 @@ def run():
     plt.ylabel("Accuracy")
     plt.show()
 
-    # Save trained model
+    # save trained model
     if (SAVE_MODEL):
         save_dir = "../../data/model"
         if (not os.path.exists(save_dir)):
             os.makedirs(save_dir)
         f = os.path.join(save_dir, "model_tile_classifier.pt")
-        torch.save(trained_model.state_dict(), f)
+        torch.save(model.state_dict(), f)
 
 
 if __name__ == "__main__":
