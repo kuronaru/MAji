@@ -61,7 +61,7 @@ class MajDataset(Dataset):
             input_list.append(torch.tensor(input_seq))
             target_code = data_to_code(target_seq)
             target_list.append(torch.tensor(target_code, dtype=torch.float))
-        input_tensor = torch.tensor(input_list)
+        input_tensor = pad_sequence(input_list, batch_first=True, padding_value=30)
         target_tensor = torch.stack(target_list)  # (batch_size, sequence_length)
         return input_tensor, target_tensor
 
