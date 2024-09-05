@@ -37,6 +37,10 @@ def data_to_code(data):
     for i in range(38):
         code_temp = [0, 0, 0, 0, 0]
         t_num = data.count(i)
+        # TODO: find a way to add penalty to tile counts exceeding 4
+        if (t_num > 4):
+            print("WRONG tile count %d:%d" % (i, t_num))
+            t_num = 4
         code_temp[t_num] = 1
         code += code_temp
     return code
