@@ -24,10 +24,9 @@ DEVICE = torch.cuda.current_device() if torch.cuda.is_available() else "cpu"
 dbgf(INFO, "Using device %s" % DEVICE)
 
 # training parameters
-vocab_size = 38
+one_hot_size = 38
 embed_size = 50
 hidden_size = 128
-output_size = 38
 num_layers = 1
 learning_rate = 0.01
 batch_size = 1
@@ -58,7 +57,7 @@ def train_model(model, optimizer, loss_func, data_loader, train_size, device=DEV
         running_loss += loss.item()
 
     total_loss = running_loss / train_size
-    total_accuracy = accuracy.compute()
+    total_accuracy = accuracy.compute().cpu()
     return total_loss, total_accuracy
 
 
@@ -85,14 +84,14 @@ def evaluate_model(model, loss_func, data_loader, test_size, device=DEVICE):
         running_loss += loss_func(outputs, targets).item()
 
     total_loss = running_loss / test_size
-    total_accuracy = accuracy.compute()
+    total_accuracy = accuracy.compute().cpu()
     dbgf(DEBUG, "Evaluation: loss=%.4f \t accuracy=%.4f" % (total_loss, total_accuracy))
     return total_loss, total_accuracy
 
 
 def run():
     trained_model = "../../data/model/model_hand_infer.pt"
-    model = HandInfer(vocab_size, embed_size, hidden_size, output_size, num_layers)
+    model = HandInfer(one_hot_size, embed_size, hidden_size, num_layers)
     if (LOAD_MODEL):
         assert os.path.exists(trained_model), "model_hand_infer does not exist"
         model.load_state_dict(torch.load(trained_model, map_location=torch.device("cpu")))

@@ -2,10 +2,9 @@ import os
 
 import cv2
 import torch
-from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence
+from torch.nn.utils.rnn import pad_sequence
 from torch.utils.data import Dataset
 
-from src.nn.hand_infer import HandInfer
 from src.utils.data_process import data_to_code
 from src.utils.image_process import parse_games
 
@@ -59,8 +58,15 @@ class MajDataset(Dataset):
             input_seq = pair[0]
             target_seq = pair[1]
             input_list.append(torch.tensor(input_seq))
+            # TODO:parse_games classify error
+            #  one cause is adding four of a kind directly to the hand
+            while (len(target_seq) < 13):
+                target_seq.append(30)
+            if (len(target_seq) > 13):
+                target_seq = target_seq[:13]
+
             target_code = data_to_code(target_seq)
-            target_list.append(torch.tensor(target_code, dtype=torch.float))
+            target_list.append(target_code)
         input_tensor = pad_sequence(input_list, batch_first=True, padding_value=30)
         target_tensor = torch.stack(target_list)  # (batch_size, sequence_length)
         return input_tensor, target_tensor

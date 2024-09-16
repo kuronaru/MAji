@@ -1,6 +1,7 @@
 from logging import DEBUG, INFO
 
 import cv2
+import torch
 
 from src.utils.dbgf import DebugPrintf, DATA_PROCESS_DBG_LVL
 from src.utils.image_process import parse_games
@@ -28,40 +29,35 @@ def translate_data(data):
 
 def data_to_code(data):
     """
-    encode data into a 38*5 matrix, each row represents a tile symbol, each column represents number from 0 to 4
-    this could be regarded as 2-dimension one-hot encoding of tile class and tile count
-    :param data: numeric data list
-    :return: encoded matrix
+    encode data into a 13*38 matrix, each row represents a one-hot encoded tile symbol
+    :param data: numeric data tensor
+    :return: encoded one-hot code tensor
     """
-    code = []
-    for i in range(38):
-        code_temp = [0, 0, 0, 0, 0]
-        t_num = data.count(i)
-        # TODO: find a way to add penalty to tile counts exceeding 4
-        if (t_num > 4):
-            print("WRONG tile count %d:%d" % (i, t_num))
-            t_num = 4
-        code_temp[t_num] = 1
-        code += code_temp
+    data_len = len(data)
+    code = torch.zeros(data_len, 38)
+    for i in range(data_len):
+        code[i][data[i]] = 1
     return code
 
 
 def code_to_data(code):
     """
     decode the one-hot encoding matrix into numeric data list
-    :param code: one-hot encoding matrix
-    :return: numeric data list
+    :param code: 13*38 one-hot code tensor
+    :return: numeric data tensor
     """
-    code = code.view(38, 5)
-    data = []
-    for index, code_row in enumerate(code):
-        t_num = code_row.argmax(0)
-        for i in range(t_num):
-            data.append(index)
+    data = torch.empty(len(code))
+    for i, code_row in enumerate(code):
+        tile = code_row.argmax(0)
+        data[i] = tile
     return data
 
 
 def encode_image_to_data():
+    """
+    test parse data
+    :return:
+    """
     model = "../../data/model/model_tile_classifier.pt"
     image = cv2.imread("../../data/games/0029_r12.jpg")
     code_lists = parse_games(image, model)
