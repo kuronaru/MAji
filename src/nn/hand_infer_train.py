@@ -48,7 +48,7 @@ def train_model(model, optimizer, loss_func, data_loader, train_size, device=DEV
         targets = targets.to(device)
 
         optimizer.zero_grad()
-        outputs = model(inputs)
+        outputs = model(inputs, targets)
         loss = loss_func(outputs, targets)
         loss.backward()
         optimizer.step()

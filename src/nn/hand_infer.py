@@ -28,7 +28,7 @@ class HandInfer(nn.Module):
         self.decoder_rnn = nn.RNN(one_hot_size, hidden_size, num_layers, batch_first=True)
         self.fc = nn.Linear(hidden_size, one_hot_size)
 
-    def forward(self, x):
+    def forward(self, x, y=None):
         device = x.device
         mask = x != 30
         lengths = mask.sum(dim=1)
@@ -40,11 +40,13 @@ class HandInfer(nn.Module):
         encoder_predict = self.fc(encoder_out[:, -1, :])
         predict_tile = F.gumbel_softmax(encoder_predict, tau=1.0, hard=True)
 
-        # TODO: use teacher forcing technique to boost training
         predict_seq = [[], [], [], []]
         for j in range(13):
             for i, tile in enumerate(predict_tile):
                 predict_seq[i].append(tile)
+            if (y is not None):
+                # use teacher forcing technique to boost training
+                predict_tile = y[:, j, :]
             predict_tile = predict_tile.unsqueeze(1)
             predict_next, hidden_state = self.decoder_rnn(predict_tile, hidden_state)
             predict_next = self.fc(predict_next[:, -1, :])
