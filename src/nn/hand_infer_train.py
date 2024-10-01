@@ -26,8 +26,8 @@ dbgf(INFO, "Using device %s" % DEVICE)
 # training parameters
 one_hot_size = 38
 embed_size = 50
-hidden_size = 128
-num_layers = 1
+hidden_size = 256
+num_layers = 2
 learning_rate = 0.01
 batch_size = 1
 epochs = 10
@@ -53,7 +53,12 @@ def train_model(model, optimizer, loss_func, data_loader, train_size, device=DEV
         loss.backward()
         optimizer.step()
 
-        accuracy(outputs, targets)
+        for idx, code in enumerate(outputs):
+            predicted_hand = code_to_data(code)
+            target_hand = code_to_data(targets[idx])
+            sorted_predicted, _ = torch.sort(predicted_hand)
+            sorted_target, _ = torch.sort(target_hand)
+            accuracy(sorted_predicted, sorted_target)
         running_loss += loss.item()
 
     total_loss = running_loss / train_size
@@ -76,11 +81,14 @@ def evaluate_model(model, loss_func, data_loader, test_size, device=DEVICE):
         targets = targets.to(device)
         with torch.no_grad():
             outputs = model(inputs)  # output size batch_size * 190
-            for code in outputs:
+            for idx, code in enumerate(outputs):
                 predicted_hand = code_to_data(code)
                 dbgf(DEBUG, "Predicted hand: %s" % predicted_hand)
+                target_hand = code_to_data(targets[idx])
+                sorted_predicted, _ = torch.sort(predicted_hand)
+                sorted_target, _ = torch.sort(target_hand)
+                accuracy(sorted_predicted, sorted_target)
 
-        accuracy(outputs, targets)
         running_loss += loss_func(outputs, targets).item()
 
     total_loss = running_loss / test_size
@@ -105,7 +113,7 @@ def run():
     dbgf(INFO, "Train dataset size %d, test dataset size %d" % (train_size, test_size))
 
     loss_func = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-5)
 
     metrics = {"train_loss": [], "train_acc": [], "test_loss": [], "test_acc": []}
     for epoch in tqdm(range(epochs), total=epochs, desc="Training"):
